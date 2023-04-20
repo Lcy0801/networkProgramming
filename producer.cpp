@@ -130,7 +130,7 @@ int main()
     srand((unsigned int)time(nullptr));
     while (true)
     {
-        int value = rand();
+        int value = rand() % 10;
         if (semop(cpSemid, &cpSemOps, 1) == -1)
         {
             cout << "消费->生产 同步信号量的p操作失败!" << endl;
@@ -145,6 +145,7 @@ int main()
             exit(-1);
         }
         // 向共享内存中写入数据
+        cout << "向共享内存中写入数据:" << value << endl;
         memset(pshm, value, 4);
         // 临界区间解锁
         if (semop(mutextid, &mutextV, 1) == -1)
