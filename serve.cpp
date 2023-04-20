@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
     }
 
     // 第3步：把socket设置为监听模式。
+    // 服务端监听连接请求的socket在接收到客户端的连接请求后会将该连接请求放入请求队列中
+    // 第二个参数表示请求连接队列的最大长度
     if (listen(listenfd, 5) != 0)
     {
         perror("listen");
