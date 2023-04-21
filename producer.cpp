@@ -14,6 +14,7 @@ union Semun
     unsigned short *array;
 };
 
+// 进程结束：释放共享内存 稍微信号量
 void EXIT(int sig = 0)
 {
     // 释放共享内存
@@ -51,7 +52,6 @@ int main()
     {
         cout << "共享内存创建失败!" << endl;
         EXIT();
-        exit(-1);
     }
     void *pshm = shmat(shmid, nullptr, 0);
     // 创建互斥信号量
@@ -60,7 +60,6 @@ int main()
     {
         cout << "互斥信号量创建失败!" << endl;
         EXIT();
-        exit(-1);
     }
     // 初始化互斥信号量
     Semun mutextValue;
@@ -69,18 +68,17 @@ int main()
     {
         cout << "互斥信号量初始化失败!" << endl;
         EXIT();
-        exit(-1);
     }
     // 互斥信号量p操作
     sembuf mutextP;
-    mutextP.sem_flg = 0;
-    mutextP.sem_op = -1;
     mutextP.sem_num = 0;
+    mutextP.sem_op = -1;
+    mutextP.sem_flg = 0;
     // 互斥信号量v操作
     sembuf mutextV;
-    mutextV.sem_flg = 0;
-    mutextV.sem_op = 1;
     mutextV.sem_num = 0;
+    mutextV.sem_op = 1;
+    mutextV.sem_flg = 0;
 
     // 创建 生产->消费 同步信号量
     int pcSemid = semget(0x5002, 1, 0640 | IPC_CREAT);
@@ -88,7 +86,6 @@ int main()
     {
         cout << "生产->消费 同步信号量创建失败!" << endl;
         EXIT();
-        exit(-1);
     }
     Semun pcSemValue;
     pcSemValue.val = 0;
@@ -96,7 +93,6 @@ int main()
     {
         cout << "生产->消费 同步信号量初始化失败!" << endl;
         EXIT();
-        exit(-1);
     }
     // 对 生产->消费 同步信号量的v操作
     sembuf pcSemOps;
@@ -110,7 +106,6 @@ int main()
     {
         cout << "消费->生产 同步信号量创建失败!" << endl;
         EXIT();
-        exit(-1);
     }
     Semun cpSemValue;
     cpSemValue.val = 1;
@@ -118,7 +113,6 @@ int main()
     {
         cout << "消费->生产 同步信号量初始化失败!" << endl;
         EXIT();
-        exit(-1);
     }
     // 对 消费->生产 同步信号量的v操作
     sembuf cpSemOps;
@@ -130,35 +124,32 @@ int main()
     srand((unsigned int)time(nullptr));
     while (true)
     {
-        int value = rand() % 10;
+        sleep(3);
+        int value = rand();
         if (semop(cpSemid, &cpSemOps, 1) == -1)
         {
             cout << "消费->生产 同步信号量的p操作失败!" << endl;
             EXIT();
-            exit(-1);
         }
         // 临界区间上锁
         if (semop(mutextid, &mutextP, 1) == -1)
         {
             cout << "互斥信号量p操作失败!" << endl;
             EXIT();
-            exit(-1);
         }
         // 向共享内存中写入数据
         cout << "向共享内存中写入数据:" << value << endl;
-        memset(pshm, value, 4);
+        memmove(pshm, &value, 4);
         // 临界区间解锁
         if (semop(mutextid, &mutextV, 1) == -1)
         {
             cout << "互斥信号量v操作失败!" << endl;
             EXIT();
-            exit(-1);
         }
         if (semop(pcSemid, &pcSemOps, 1) == -1)
         {
             cout << "生产->消费 同步信号量的v操作失败!" << endl;
             EXIT();
-            exit(-1);
         }
     }
     return 0;

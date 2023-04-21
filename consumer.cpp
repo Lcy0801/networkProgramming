@@ -6,7 +6,7 @@
 using namespace std;
 
 int main()
-{ 
+{
     // 获取共享内存
     int shmid = shmget(0x5000, 4, 0640);
     if (shmid == -1)
@@ -28,9 +28,9 @@ int main()
     mutexP.sem_op = -1;
     mutexP.sem_flg = 0;
     sembuf mutexV;
-    mutexP.sem_num = 0;
-    mutexP.sem_op = 1;
-    mutexP.sem_flg = 0;
+    mutexV.sem_num = 0;
+    mutexV.sem_op = 1;
+    mutexV.sem_flg = 0;
     // 获取 生产者->消费者同步信号量
     int pcSemid = semget(0x5002, 1, 0640);
     if (pcSemid == -1)
